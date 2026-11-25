@@ -47,7 +47,8 @@ def run_turn(client, clinic, messages, trace, model=MODEL):
             tool_calls=[{"name": c.function.name, "arguments": c.function.arguments} for c in calls],
         )
 
-        assistant = {"role": "assistant", "content": msg.content}
+        text = msg.content or ("" if calls else FALLBACK)
+        assistant = {"role": "assistant", "content": text}
         if calls:
             assistant["tool_calls"] = [
                 {"id": c.id, "type": "function", "function": {"name": c.function.name, "arguments": c.function.arguments}}
@@ -56,7 +57,7 @@ def run_turn(client, clinic, messages, trace, model=MODEL):
         messages.append(assistant)
 
         if not calls:
-            return msg.content
+            return text
 
         for call in calls:
             try:
@@ -71,4 +72,5 @@ def run_turn(client, clinic, messages, trace, model=MODEL):
     # The model kept calling tools without answering: hand the chat to a person.
     trace.log("max_steps_reached", steps=MAX_STEPS)
     clinic.handoff_to_human("unsure", "Agent hit the step limit")
+    messages.append({"role": "assistant", "content": FALLBACK})
     return FALLBACK

@@ -33,7 +33,10 @@ class ToolTests(unittest.TestCase):
         self.assertEqual(len(clinic.bookings), 1)
 
     def test_price_lookup_is_fuzzy(self):
+        self.assertEqual(Clinic().get_price("limpieza")["price_mxn"], 600)
         self.assertEqual(Clinic().get_price("cleaning")["price_mxn"], 600)
+        self.assertIn("error", Clinic().get_price(""))
+        self.assertIn("error", run_tool(Clinic(), "get_price", {"service": None}))
         self.assertIn("error", Clinic().get_price("nose job"))
 
     def test_unknown_tool_and_bad_args(self):

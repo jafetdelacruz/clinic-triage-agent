@@ -22,7 +22,13 @@ def main():
     trace = Trace(f"chat-{int(time.time())}")
     messages = new_conversation()
     print("Clinica Dental Sonrisa (type 'exit' to quit)\n")
-    while (text := input("You: ").strip()).lower() not in {"exit", "quit"}:
+    while True:
+        try:
+            text = input("You: ").strip()
+        except (EOFError, KeyboardInterrupt):
+            break
+        if text.lower() in {"exit", "quit"}:
+            break
         messages.append({"role": "user", "content": text})
         seen = sum(1 for _ in trace.path.open(encoding="utf-8"))
         reply = run_turn(client, clinic, messages, trace)

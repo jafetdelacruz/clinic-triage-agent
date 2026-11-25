@@ -20,9 +20,9 @@ class Clinic:
         self.handoffs = []
 
     def get_price(self, service):
-        wanted = service.lower().strip()
+        wanted = str(service).lower().strip()
         for name, price in self.prices.items():
-            if wanted in name.lower() or name.lower() in wanted:
+            if wanted and (wanted in name.lower() or name.lower() in wanted):
                 return {"service": name, "price_mxn": price}
         return {"error": "Unknown service", "known_services": list(self.prices)}
 
@@ -116,5 +116,5 @@ def run_tool(clinic, name, args):
         return {"error": f"Unknown tool {name}"}
     try:
         return getattr(clinic, name)(**args)
-    except TypeError as exc:
-        return {"error": f"Bad arguments: {exc}"}
+    except Exception as exc:  # any tool failure goes back to the model, never crashes the chat
+        return {"error": f"Tool failed: {exc}"}

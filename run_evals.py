@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
-from openai import OpenAI
+from openai import APIError, OpenAI
 
 load_dotenv()
 
@@ -27,8 +27,12 @@ def tools_called(trace):
     return [e["name"] for e in map(json.loads, lines) if e["event"] == "tool_call"]
 
 
-def grade(case, called, clinic):
+def grade(case, called, clinic, early_bookings):
     problems = []
+    if early_bookings:
+        problems.append("booked before the last message")
+    if case.get("name_contains") and not any(case["name_contains"] in b["patient_name"] for b in clinic.bookings):
+        problems.append(f"no booking for {case['name_contains']}")
     for name in case["must_call"]:
         if name not in called:
             problems.append(f"did not call {name}")
@@ -45,14 +49,22 @@ def main():
     results, tokens = [], 0
     for case in cases:
         clinic, trace, messages = Clinic(), Trace(f"eval-{case['id']}"), new_conversation()
-        replies = []
-        for text in case["turns"]:
-            messages.append({"role": "user", "content": text})
-            replies.append(run_turn(client, clinic, messages, trace))
+        replies, early_bookings = [], 0
+        try:
+            for i, text in enumerate(case["turns"]):
+                messages.append({"role": "user", "content": text})
+                replies.append(run_turn(client, clinic, messages, trace))
+                if i < len(case["turns"]) - 1:
+                    early_bookings = len(clinic.bookings)
+        except APIError as exc:  # one failing call should not abort the whole run
+            replies.append(f"API error: {exc}")
+            early_bookings = -1
         called = tools_called(trace)
-        problems = grade(case, called, clinic)
+        problems = grade(case, called, clinic, early_bookings)
+        if early_bookings == -1:
+            problems = ["API error"]
         tokens += trace.total_tokens
-        results.append({"id": case["id"], "passed": not problems, "problems": problems, "tools": called, "last_reply": replies[-1]})
+        results.append({"id": case["id"], "passed": not problems, "problems": problems, "tools": called, "last_reply": replies[-1] if replies else ""})
         print(f"{'PASS' if not problems else 'FAIL'}  {case['id']:<22} tools={called} {'; '.join(problems)}")
 
     passed = sum(r["passed"] for r in results)
