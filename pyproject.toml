@@ -1,0 +1,6 @@
+[project]
+name = "clinic-triage-agent"
+version = "0.1.0"
+description = "A WhatsApp-style triage agent for a dental clinic: tool calling, tracing and evals."
+requires-python = ">=3.12"
+dependencies = ["openai>=1.40", "python-dotenv>=1.0"]

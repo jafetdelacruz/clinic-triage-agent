@@ -1,0 +1,19 @@
+{
+  "clinic": "Clinica Dental Sonrisa",
+  "city": "Merida, Mexico",
+  "today": "2026-12-01",
+  "prices_mxn": {
+    "Dental cleaning": 600,
+    "Teeth whitening": 3500,
+    "Tooth extraction": 900,
+    "Filling (resin)": 800,
+    "Orthodontics consultation": 400
+  },
+  "free_slots": {
+    "2026-12-01": ["09:00", "12:00", "17:00"],
+    "2026-12-02": ["10:00", "11:00", "16:00"],
+    "2026-12-03": ["09:00", "13:00"],
+    "2026-12-04": ["10:00", "12:00", "18:00"],
+    "2026-12-05": ["09:00", "10:00"]
+  }
+}
